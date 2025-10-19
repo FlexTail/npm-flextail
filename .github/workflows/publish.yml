@@ -1,0 +1,49 @@
+name: NPM Publish on Release
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+    
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Determine NPM Dist-Tag
+        id: dist_tag_logic
+        run: |
+          # Default to false for manual runs (workflow_dispatch) where github.event.release.prerelease is unavailable
+          IS_PRERELEASE=${{ github.event.release.prerelease || 'false' }}
+
+          # If triggered by a release, check the prerelease flag.
+          # If manually triggered, this logic will need a way to determine the version/tag, 
+          # but for simplicity, we default to 'latest' unless a release event is present.
+
+          # Note: When using workflow_dispatch, the release object is empty. 
+          # For advanced manual publishing, you would add inputs to the workflow_dispatch.
+          # For now, we assume standard publish (latest) if run manually.
+
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            echo "NPM_DIST_TAG=next" >> $GITHUB_ENV
+          else
+            echo "NPM_DIST_TAG=latest" >> $GITHUB_ENV
+          fi
+
+      - name: Publish package
+        run: npm publish --access public --tag ${{ env.NPM_DIST_TAG }}

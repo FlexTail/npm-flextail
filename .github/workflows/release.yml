@@ -1,0 +1,80 @@
+name: Create Release on CLI Change
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'components/**'
+      - 'lib/**'
+      - 'registry/**'
+      - '**/README.md'
+      - '.github/**'
+
+jobs:
+  create_release:
+    name: Create Release Tag & Asset
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write 
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies and JSON processor
+        run: |
+          sudo apt-get install jq zip
+          npm install
+
+      - name: Create Distribution Package
+        run: |
+          mkdir dist
+          cp scripts/cli.js dist/
+          cp package.json dist/
+          zip -r flextail.zip dist/
+          
+      - name: Determine Release Type and Tag
+        id: release_logic
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(jq -r .version package.json)
+          FULL_TAG="v$VERSION"
+          
+          TIME=$(date +%Y%m%d%H%M%S) 
+          PRERELEASE_TAG="${FULL_TAG}-pre-${TIME}"
+          
+          if gh release view $FULL_TAG --repo $GITHUB_REPOSITORY > /dev/null 2>&1; then
+            echo "RELEASE_TYPE=Pre-release" >> $GITHUB_ENV
+            echo "TAG_TO_USE=$PRERELEASE_TAG" >> $GITHUB_ENV
+            echo "PRERELEASE_FLAG=--prerelease" >> $GITHUB_ENV
+            # Updated title to include a visual identifier for better sorting/visibility
+            echo "TITLE=[PREVIEW] ${PRERELEASE_TAG}" >> $GITHUB_ENV 
+            echo "tag_created=true" >> $GITHUB_OUTPUT
+          else
+            echo "RELEASE_TYPE=Standard Release" >> $GITHUB_ENV
+            echo "TAG_TO_USE=$FULL_TAG" >> $GITHUB_ENV
+            echo "PRERELEASE_FLAG=" >> $GITHUB_ENV
+            echo "TITLE=v$VERSION" >> $GITHUB_ENV
+            echo "tag_created=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ env.TAG_TO_USE }} \
+            --title "${{ env.TITLE }}" \
+            --notes "Automated ${{ env.RELEASE_TYPE }} for CLI changes. Triggers NPM publish." \
+            --target ${{ github.sha }} \
+            ${{ env.PRERELEASE_FLAG }} \
+            --repo $GITHUB_REPOSITORY
+
+      - name: Upload Release Asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ env.TAG_TO_USE }} flextail.zip \
+            --repo $GITHUB_REPOSITORY

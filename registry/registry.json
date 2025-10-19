@@ -1,0 +1,15 @@
+[
+  {
+    "name": "button",
+    "type": "components:ui",
+    "description": "A button component for user interaction.",
+    "dependencies": [],
+    "files": [
+      {
+        "name": "button.tsx",
+        "target_path": "components/ui/button.tsx",
+        "content_url": "https://raw.githubusercontent.com/SyedArbaazHussain/npm-flextail/main/components/ui/Button.tsx"
+      }
+    ]
+  }
+]
