@@ -1,6 +1,6 @@
 {
   "name": "@flextail/ui",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A CLI utility to install FlexTail components.",
   "main": "scripts/cli.js",
   "type": "module",
