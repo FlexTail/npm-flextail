@@ -258,10 +258,7 @@ const iconImageSizeStyles: Record<ButtonSize, string> = {
 
 type ColorMap = Record<
   Exclude<ButtonColor, "white" | "black" | "neutral">,
-  Record<
-    Exclude<ButtonVariant, "simple" | "neutral" | "disabled">,
-    string
-  >
+  Record<Exclude<ButtonVariant, "simple" | "neutral" | "disabled">, string>
 >;
 
 const colorVariantMap: ColorMap = {
@@ -586,12 +583,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
 
     if (isDisabled) {
       variantClass = disabledStyles;
-    } else if (
-      type === "error" ||
-      type === "add" ||
-      type ===auto
-      type === "danger"
-    ) {
+    } else if (type === "error" || type === "add" || type === "danger") {
       variantClass = getIntentClasses(
         type,
         variant as Exclude<ButtonVariant, "simple" | "neutral" | "disabled">
@@ -713,12 +705,13 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
       }
 
       if (React.isValidElement(currentIcon)) {
-        return React.cloneElement(
-          currentIcon as ReactElement<any, string | JSXElementConstructor<any>>,
-          {
-            className: cn(currentIcon.props.className, sizeClass),
-          }
-        );
+        const iconElement = currentIcon as ReactElement<
+          { className?: string }, // Specify that it has a className prop
+          string | JSXElementConstructor<any>
+        >;
+        return React.cloneElement(iconElement, {
+          className: cn(iconElement.props.className, sizeClass),
+        });
       }
 
       if (typeof currentIcon === "string" || typeof currentIcon === "number") {
