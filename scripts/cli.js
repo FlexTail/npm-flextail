@@ -62,7 +62,6 @@ async function addComponent(componentName) {
             await downloadAndSaveFile(file.content_url, file.target_path);
         }
         console.log(`\n🎉 Success! Component "${componentName}" and its dependencies are installed.`);
-        console.log("Next steps: Ensure you have 'clsx' and 'tailwind-merge' installed in your project.");
     } catch (error) {
         console.error(`\n❌ Installation failed for component "${componentName}".`);
         process.exit(1);
