@@ -5,7 +5,7 @@ import fetch from 'node-fetch';
 import fs from 'fs/promises';
 import path from 'path';
 
-const REGISTRY_URL = 'https://raw.githubusercontent.com/SyedArbaazHussain/npm-flextail/main/registry/registry.json';
+const REGISTRY_URL = 'https://raw.githubusercontent.com/FlexTail/npm-flextail/main/registry/registry.json';
 
 async function getRegistry() {
     try {
