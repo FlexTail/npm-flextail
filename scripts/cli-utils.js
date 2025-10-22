@@ -1,7 +1,6 @@
 import fetch from 'node-fetch';
 import fs from 'fs/promises';
 import path from 'path';
-import { process } from 'process';
 
 export const REGISTRY_URL = 'https://raw.githubusercontent.com/FlexTail/npm-flextail/main/registry/registry.json';
 
