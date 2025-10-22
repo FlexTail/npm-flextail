@@ -1,6 +1,5 @@
 import path from 'path';
 import fs from 'fs/promises';
-import { process } from 'process';
 import { getRegistry, getComponentBaseDir } from './cli-utils.js';
 
 export async function removeComponent(componentName) {

@@ -1,5 +1,4 @@
 import path from 'path';
-import { process } from 'process';
 import { getRegistry, getComponentBaseDir, getTsConfigPathAlias, downloadAndSaveFile } from './cli-utils.js';
 
 export async function addComponent(componentName) {
