@@ -1,8 +1,15 @@
-name: NPM Publish
+name: Publish Package to NPM
 on:
+  push:
+    tags:
+      - 'v*'
   release:
     types: [created]
   workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   publish:
@@ -23,7 +30,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           
       - name: Install dependencies
-        run: npm install
+        run: npm install -g npm@latest
         
       - name: Determine NPM Dist-Tag
         id: dist_tag_logic
@@ -33,6 +40,10 @@ jobs:
           else
             echo "NPM_DIST_TAG=latest" >> $GITHUB_ENV
           fi
+
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test --if-present
 
       - name: Publish package
         run: npm publish --access public --tag ${{ env.NPM_DIST_TAG }}

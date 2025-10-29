@@ -1,10 +1,10 @@
 import path from 'path';
 import fs from 'fs/promises';
-import { getRegistry, getComponentBaseDir } from './cli-utils.js';
+import { getRegistry, getComponentPathPreference } from './cli-utils.js';
 
 export async function removeComponent(componentName) {
     console.log(`\n📦 FlexTail CLI: Removing component "${componentName}"...`);
-    
+
     const registry = await getRegistry();
     const component = registry.find(c => c.name.toLowerCase() === componentName.toLowerCase());
 
@@ -14,43 +14,56 @@ export async function removeComponent(componentName) {
         process.exit(1);
     }
 
-    console.log(`\n🔍 Found component in registry. Preparing to remove ${component.files.length} files...`);
+    const preference = await getComponentPathPreference();
+    const componentSaveDir = preference.customPath;
 
-    const baseDir = await getComponentBaseDir();
-    if (baseDir) {
-        console.log(`📝 Detected 'src' directory. Using installation path prefix: '${baseDir}/'`);
-    } else {
-        console.log(`📝 No 'src' directory detected. Using installation path prefix: './'`);
+    if (!componentSaveDir) {
+        console.error('\n🚨 Error: Failed to determine component save path.');
+        process.exit(1);
     }
 
-    let allRemoved = true;
+    if (preference.mode === 'custom') {
+        console.log(`\n🛠️ Custom path selected: ${componentSaveDir}`);
+    } else {
+        console.log(`\n🤖 Auto root path determined: ${componentSaveDir}`);
+    }
+
+    console.log(`\n🔍 Found component in registry. Attempting to remove ${component.files.length} files...`);
+
+    let filesRemovedCount = 0;
+    let errorsOccurred = false;
 
     try {
         for (const file of component.files) {
-            const finalTargetPath = path.normalize(path.join(baseDir, file.target_path));
-            
+            const finalTargetPath = path.normalize(path.join(componentSaveDir, file.target_path));
+
             try {
                 await fs.unlink(finalTargetPath);
                 console.log(`🗑️ File removed successfully: ${finalTargetPath}`);
+                filesRemovedCount++;
             } catch (error) {
                 if (error.code === 'ENOENT') {
                     console.log(`⚠️ File already removed or not found: ${finalTargetPath}`);
                 } else {
                     console.error(`\n🚨 Error removing file ${finalTargetPath}:`);
-                    console.error(error.message);
-                    allRemoved = false;
+                    console.error(`Reason: ${error.message}`);
+                    errorsOccurred = true;
                 }
             }
         }
-        
-        if (allRemoved) {
-            console.log(`\n✅ Success! Component "${componentName}" and its dependencies are removed.`);
+
+        if (filesRemovedCount > 0 && !errorsOccurred) {
+            console.log(`\n✅ Success! Component "${componentName}" files were removed.`);
+        } else if (errorsOccurred) {
+            console.log(`\n⚠️ Finished removal, but some errors occurred. See messages above.`);
+            process.exit(1);
         } else {
-             console.log(`\n⚠️ Finished removal, but some errors occurred.`);
+            console.log(`\n⚠️ Finished removal, but no files were found or removed for "${componentName}".`);
         }
 
     } catch (error) {
         console.error(`\n❌ Removal failed for component "${componentName}".`);
+        console.error(`Reason: ${error.message}`);
         process.exit(1);
     }
 }

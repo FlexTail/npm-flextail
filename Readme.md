@@ -6,9 +6,9 @@
 
 The best place to see how FlexTail works is on our website. You'll find all the **API details**, live **examples**, and a sandbox where you can play around with every setting. Seriously, check it out first\!
 
-| **Resource** | **Link** |
-| :--- | :--- |
-| **Website & Docs** | [https://github.com/FlexTail/npm-flextail](https://www.google.com/search?q=https://github.com/FlexTail/npm-flextail)|
+| **Resource**       | **Link**                                                                                                             |
+| :----------------- | :------------------------------------------------------------------------------------------------------------------- |
+| **Website & Docs** | [https://github.com/FlexTail/npm-flextail](https://www.google.com/search?q=https://github.com/FlexTail/npm-flextail) |
 
 <!-- | **Component Playground** | [https://github.com/FlexTail/npm-f;extail](https://www.google.com/search?q=https://github.com/FlexTail/npm-flextail) | -->
 
@@ -16,11 +16,11 @@ The best place to see how FlexTail works is on our website. You'll find all the 
 
 For this first version, we're focusing on core elements:
 
-  * **`Button`:** This is your primary action component. It’s flexible with lots of **colors**, **sizes**, and **shapes**. Need a 'primary' button, or a light 'ghost' one? We've got you covered. Plus, it handles the **loading state** for you and automatically adds the right icon (like a `+` for "add" type) if you don't provide one\!
+- **`Button`:** This is your primary action component. It’s flexible with lots of **colors**, **sizes**, and **shapes**. Need a 'primary' button, or a light 'ghost' one? We've got you covered. Plus, it handles the **loading state** for you and automatically adds the right icon (like a `+` for "add" type) if you don't provide one\!
 
-  * **`ButtonGroup`:** This is a neat tool for putting buttons next to each other, like in a toolbar. It automatically cleans up the corners and adds subtle dividers so they look like one continuous unit.
+- **`ButtonGroup`:** This is a neat tool for putting buttons next to each other, like in a toolbar. It automatically cleans up the corners and adds subtle dividers so they look like one continuous unit.
 
-  * **TypeScript Types:** Everything is fully typed, so your code editor will love you\! No more guessing props—intellisense handles it all.
+- **TypeScript Types:** Everything is fully typed, so your code editor will love you\! No more guessing props—intellisense handles it all.
 
 ### What's Next?
 
@@ -33,9 +33,10 @@ It's super quick to install\!
 ```bash
 npm install flextail
 # or
+pnpm add flextail
+# or
 yarn add flextail
 ```
-
 
 ## 💻 Want to Contribute?
 
