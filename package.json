@@ -18,6 +18,14 @@
   ],
   "author": "Syed Arbaaz Hussain",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FlexTail/npm-flextail.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FlexTail/npm-flextail/issues"
+  },
+  "homepage": "https://github.com/FlexTail/npm-flextail#readme",
   "dependencies": {
     "commander": "^12.1.0",
     "node-fetch": "^3.3.2",
