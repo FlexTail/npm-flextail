@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write
+  id-token: write 
   contents: read
 
 jobs:
@@ -16,20 +16,44 @@ jobs:
       id-token: write
       
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js for Trusted Publish
+      - name: Set up Node.js for Trusted Publish (OIDC)
         uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
           
-      - name: Install dependencies
-        run: npm install -g npm@latest
+      - name: Install dependencies (CI)
+        run: npm ci
+        
+      - name: Run Build (if script exists)
+        run: npm run build --if-present
+        
+      - name: Run Tests (if script exists)
+        run: npm test --if-present
 
-      - run: npm ci
-      - run: npm run build --if-present
-      - run: npm test --if-present
+      - name: Determine Publish Tag
+        id: determine_tag
+        run: |
+          VERSION=$(jq -r .version package.json)
+          PUBLISH_TAG=""
 
-      - name: Publish package
-        run: npm publish --access public --tag latest
+          echo "Detected package version: $VERSION"
+
+          if [[ "$VERSION" == *"-rc"* ]]; then
+            PUBLISH_TAG="beta"
+          elif [[ "$VERSION" != *"-"* ]]; then
+            PUBLISH_TAG="latest"
+          else
+            PUBLISH_TAG="pre"
+          fi
+          
+          echo "Calculated NPM Tag: $PUBLISH_TAG"
+          echo "PUBLISH_TAG=$PUBLISH_TAG" >> $GITHUB_OUTPUT
+
+      - name: Publish Package
+        run: npm publish --access public --tag ${{ steps.determine_tag.outputs.PUBLISH_TAG }} --provenance
+        env:
+          PUBLISH_TAG: ${{ steps.determine_tag.outputs.PUBLISH_TAG }}
