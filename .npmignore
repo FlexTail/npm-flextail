@@ -1,0 +1,26 @@
+# Dependencies and Builds
+node_modules
+*.tsbuildinfo
+dist/tmp/
+
+# Source Code
+scripts/
+studio/
+
+# Development and Configuration
+*.lock
+pnpm-lock.yaml
+pnpm-workspace.yaml
+.npmrc
+.prettierrc
+.editorconfig
+.eslintrc.json
+.vscode/
+
+# Git and Version Control
+.git
+.gitignore
+
+# Logs and Local Data
+npm-debug.log
+.DS_Store

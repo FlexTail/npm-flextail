@@ -1,11 +1,17 @@
 import path from 'path';
 import fs from 'fs/promises';
-import { getRegistry, getComponentPathPreference } from './cli-utils.js';
+import prompts from 'prompts';
+import { getRegistry } from './helpers.js';
+import { getConfig } from './config.js';
 
 export async function removeComponent(componentName) {
     console.log(`\n📦 FlexTail CLI: Removing component "${componentName}"...`);
 
-    const registry = await getRegistry();
+    const [config, registry] = await Promise.all([
+        getConfig(),
+        getRegistry()
+    ]);
+
     const component = registry.find(c => c.name.toLowerCase() === componentName.toLowerCase());
 
     if (!component) {
@@ -14,22 +20,29 @@ export async function removeComponent(componentName) {
         process.exit(1);
     }
 
-    const preference = await getComponentPathPreference();
-    const componentSaveDir = preference.customPath;
+    const componentSaveDir = path.normalize(path.join(process.cwd(), config.aliases.components));
+    console.log(`\n🔍 Locating files in: ${config.aliases.components}`);
 
-    if (!componentSaveDir) {
-        console.error('\n🚨 Error: Failed to determine component save path.');
-        process.exit(1);
+    const filesToDelete = component.files.map(file => 
+        path.normalize(path.join(componentSaveDir, file.target_path))
+    );
+
+    console.log('The following files will be permanently deleted:');
+    filesToDelete.forEach(file => console.log(`  - ${file}`));
+
+    const { confirm } = await prompts({
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Are you sure you want to delete these files?',
+        initial: false
+    });
+
+    if (!confirm) {
+        console.log('👋 Aborted. No files were removed.');
+        process.exit(0);
     }
 
-    if (preference.mode === 'custom') {
-        console.log(`\n🛠️ Custom path selected: ${componentSaveDir}`);
-    } else {
-        console.log(`\n🤖 Auto root path determined: ${componentSaveDir}`);
-    }
-
-    console.log(`\n🔍 Found component in registry. Attempting to remove ${component.files.length} files...`);
-
+    console.log(`\n🗑️ Removing ${component.files.length} files...`);
     let filesRemovedCount = 0;
     let errorsOccurred = false;
 
@@ -39,11 +52,11 @@ export async function removeComponent(componentName) {
 
             try {
                 await fs.unlink(finalTargetPath);
-                console.log(`🗑️ File removed successfully: ${finalTargetPath}`);
+                console.log(`  ✅ File removed: ${finalTargetPath}`);
                 filesRemovedCount++;
             } catch (error) {
                 if (error.code === 'ENOENT') {
-                    console.log(`⚠️ File already removed or not found: ${finalTargetPath}`);
+                    console.log(`  ⚠️  File not found (already removed): ${finalTargetPath}`);
                 } else {
                     console.error(`\n🚨 Error removing file ${finalTargetPath}:`);
                     console.error(`Reason: ${error.message}`);
@@ -55,10 +68,10 @@ export async function removeComponent(componentName) {
         if (filesRemovedCount > 0 && !errorsOccurred) {
             console.log(`\n✅ Success! Component "${componentName}" files were removed.`);
         } else if (errorsOccurred) {
-            console.log(`\n⚠️ Finished removal, but some errors occurred. See messages above.`);
+            console.log(`\n⚠️ Finished removal, but some errors occurred.`);
             process.exit(1);
         } else {
-            console.log(`\n⚠️ Finished removal, but no files were found or removed for "${componentName}".`);
+            console.log(`\n⚠️ Finished, but no files were removed for "${componentName}".`);
         }
 
     } catch (error) {

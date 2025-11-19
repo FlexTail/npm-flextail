@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://flextail.com/schema.json",
+  "title": "FlexTail Component CLI Configuration",
+  "description": "Configuration file for the FlexTail CLI utility, used to define component locations and import aliases for use in TypeScript/JavaScript projects.",
+  "type": "object",
+  "properties": {
+    "aliases": {
+      "type": "object",
+      "description": "Defines paths and aliases for installed components.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "The path alias prefix used for importing components (e.g., '@/' or '~/'). This MUST correspond to a path mapping in your tsconfig/jsconfig.",
+          "default": "@",
+          "examples": ["@", "~/components/ui", "@/lib/utils"],
+          "pattern": "^(@|~|\\.)[\\w\\-/]*$",
+          "errorMessage": "Alias path must start with @, ~, or . (e.g., '@/lib/' or '~/')."
+        },
+        "components": {
+          "type": "string",
+          "description": "The local file system path where components should be installed (e.g., 'src/components/ui'). This path is RELATIVE to the project root.",
+          "examples": ["src/components/ui", "lib/ui"],
+          "pattern": "^[^/].*[^/]$|^[^/]*$",
+          "errorMessage": "Component path must be a relative path and should not contain leading or trailing slashes (e.g., 'src/components/ui')."
+        }
+      },
+      "required": ["path", "components"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["aliases"],
+  "additionalProperties": false
+}

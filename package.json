@@ -1,14 +1,16 @@
 {
   "name": "@flextail/ui",
-  "version": "0.0.91",
+  "version": "0.0.9-pre1",
   "description": "A CLI utility to install FlexTail components.",
-  "main": "scripts/cli.js",
+  "main": "dist/cli.js",
   "type": "module",
   "scripts": {
-    "start": "node scripts/cli.js"
+    "start": "node dist/cli.js",
+    "build:cli": "tsup scripts/cli.js --format esm --platform node --out-dir dist",
+    "prepublishOnly": "npm run build:cli"
   },
   "bin": {
-    "flextail": "./scripts/cli.js"
+    "flextail": "./dist/cli.js"
   },
   "keywords": [
     "react",
@@ -27,13 +29,21 @@
   },
   "homepage": "https://github.com/FlexTail/npm-flextail#readme",
   "dependencies": {
-    "commander": "^12.1.0",
+    "commander": "^14.0.2",
     "node-fetch": "^3.3.2",
     "prompts": "^2.4.2",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^2.3.0"
+    "tailwind-merge": "^3.3.1",
+    "diff": "^8.0.2"
   },
   "devDependencies": {
-    "@types/node": "^20.12.7"
-  }
+    "@types/node": "^24.10.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
 }

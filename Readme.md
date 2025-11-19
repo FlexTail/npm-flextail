@@ -8,23 +8,14 @@ The best place to see how FlexTail works is on our website. You'll find all the 
 
 | **Resource**       | **Link**                                                                                                             |
 | :----------------- | :------------------------------------------------------------------------------------------------------------------- |
-| **Website & Docs** | [https://github.com/FlexTail/npm-flextail](https://www.google.com/search?q=https://github.com/FlexTail/npm-flextail) |
+| **Source** | [Github](https://github.com/FlexTail/npm-flextail) |
+| **Docs** | [Website](https://github.com/FlexTail/npm-flextail) |
 
 <!-- | **Component Playground** | [https://github.com/FlexTail/npm-f;extail](https://www.google.com/search?q=https://github.com/FlexTail/npm-flextail) | -->
 
-## 📦 What's in the Box?
-
-For this first version, we're focusing on core elements:
-
-- **`Button`:** This is your primary action component. It’s flexible with lots of **colors**, **sizes**, and **shapes**. Need a 'primary' button, or a light 'ghost' one? We've got you covered. Plus, it handles the **loading state** for you and automatically adds the right icon (like a `+` for "add" type) if you don't provide one\!
-
-- **`ButtonGroup`:** This is a neat tool for putting buttons next to each other, like in a toolbar. It automatically cleans up the corners and adds subtle dividers so they look like one continuous unit.
-
-- **TypeScript Types:** Everything is fully typed, so your code editor will love you\! No more guessing props—intellisense handles it all.
-
 ### What's Next?
 
-We're already planning to add essential form elements like `Input`, `Select`, and `Switch` very soon\!
+We're already planning to add essential form elements very soon\!
 
 ## 🚀 Get Started
 
@@ -41,28 +32,6 @@ yarn add flextail
 ## 💻 Want to Contribute?
 
 Awesome\! We welcome contributions\! If you want to help fix bugs or add cool new features, here’s how to get your environment ready:
-
-### Local Development Setup
-
-1.  **Grab the Code:**
-
-    ```bash
-    git clone [https://github.com/FlexTail/npm-flextail.git](https://github.com/FlexTail/npm-flextail.git)
-    cd npm-flextail
-    ```
-
-2.  **Install Stuff:**
-
-    ```bash
-    npm install
-    ```
-
-3.  **Start Watching:**
-    This command starts our build tool (`tsup`) so any changes you make in `src/` are instantly compiled into the `dist/` folder.
-
-    ```bash
-    npm run dev
-    ```
 
 ### Contribution Steps
 

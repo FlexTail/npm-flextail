@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
-import { getRegistry, getTsConfigPathAlias, downloadAndSaveFile, getComponentPathPreference } from './cli-utils.js';
+import { getRegistry, downloadAndSaveFile } from './helpers.js';
+import { getConfig } from './config.js';
 
 const checkFileExists = async (filePath) => {
   try {
@@ -11,55 +12,48 @@ const checkFileExists = async (filePath) => {
   }
 };
 
-let installedComponents = new Set();
-let componentSaveDir = '';
-let registry = [];
-let pathAlias = '';
-
-async function installComponentAndDeps(componentName, isDependency = false) {
-  if (installedComponents.has(componentName)) {
+async function installComponentAndDeps(componentName, context, isDependency = false) {
+  if (context.installed.has(componentName)) {
     return;
   }
 
-  const component = registry.find(c => c.name.toLowerCase() === componentName.toLowerCase());
+  const component = context.registry.find(c => c.name.toLowerCase() === componentName.toLowerCase());
 
   if (!component) {
     console.error(`\n❌ Error: Dependency "${componentName}" not found in the registry.`);
     throw new Error('Missing Dependency');
   }
-
   if (!isDependency) {
     console.log(`\n🔍 Found component "${componentName}". Fetching files...`);
   } else {
     console.log(`\n  🔗 Installing dependency: "${componentName}"...`);
   }
-
   if (component.deps && component.deps.length > 0) {
     for (const depName of component.deps) {
-      await installComponentAndDeps(depName, true);
+      await installComponentAndDeps(depName, context, true);
     }
   }
 
   for (const file of component.files) {
-    const finalTargetPath = path.normalize(path.join(componentSaveDir, file.target_path));
+    const finalTargetPath = path.normalize(path.join(context.saveDir, file.target_path));
 
     if (isDependency && await checkFileExists(finalTargetPath)) {
       console.log(`  ⏩ Dependency file already present: ${finalTargetPath}`);
       continue;
     }
-
-    await downloadAndSaveFile(file.content_url, finalTargetPath, pathAlias);
+    await downloadAndSaveFile(file.content_url, finalTargetPath, context.alias);
   }
-
-  installedComponents.add(componentName);
+  context.installed.add(componentName);
 }
 
 export async function addComponent(componentName) {
-  installedComponents = new Set();
-
   console.log(`\n📦 FlexTail CLI: Adding component "${componentName}"...`);
 
-  registry = await getRegistry();
+  const [config, registry] = await Promise.all([
+    getConfig(),
+    getRegistry()
+  ]);
+
   const primaryComponent = registry.find(c => c.name.toLowerCase() === componentName.toLowerCase());
 
   if (!primaryComponent) {
@@ -68,30 +62,27 @@ export async function addComponent(componentName) {
     process.exit(1);
   }
 
-  const preference = await getComponentPathPreference();
-  componentSaveDir = preference.customPath;
-
-  if (!componentSaveDir) {
-    console.error('\n🚨 Error: Failed to determine component save path.');
-    process.exit(1);
-  }
-
-  if (preference.mode === 'custom') {
-    console.log(`\n🛠️ Custom path selected: ${componentSaveDir}`);
-  } else {
-    console.log(`\n🤖 Auto root path determined: ${componentSaveDir}`);
-  }
-
-  pathAlias = await getTsConfigPathAlias();
-  if (pathAlias) {
-    console.log(`🔗 Found project path alias in tsconfig.json: '${pathAlias}'`);
-  } else {
-    console.log(`🔗 No path alias detected in tsconfig.json. Imports will use relative paths.`);
+  const context = {
+    registry: registry,
+    saveDir: path.normalize(path.join(process.cwd(), config.aliases.components)),
+    alias: config.aliases.path,
+    installed: new Set()
+  };
+  
+  console.log(`\n🛠️  Installing to: ${config.aliases.components}`);
+  if (context.alias) {
+    console.log(`🔗  Using alias: '${context.alias}'`);
   }
 
   try {
-    await installComponentAndDeps(componentName);
+    await installComponentAndDeps(componentName, context);
     console.log(`\n🎉 Success! Component "${componentName}" and all dependencies are installed.`);
+
+    if (primaryComponent.npmDependencies && primaryComponent.npmDependencies.length > 0) {
+      console.log(`\n🔔 Note: This component requires a manual install:`);
+      console.log(`  npm install ${primaryComponent.npmDependencies.join(' ')}`);
+    }
+
   } catch (error) {
     console.error(`\n❌ Installation failed for component "${componentName}".`);
     if (error.message !== 'Missing Dependency') {
