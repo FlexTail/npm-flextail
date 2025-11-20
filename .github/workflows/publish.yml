@@ -94,6 +94,6 @@ jobs:
         
       - name: Publish Package 🚀
         # Publishing the new, unique version with OIDC
-        run: npm publish --access public --tag ${{ steps.determine_tag.outputs.PUBLISH_TAG }} --provenance
+        run: npm publish --tag ${{ steps.determine_tag.outputs.PUBLISH_TAG }} --provenance
         env:
           PUBLISH_TAG: ${{ steps.determine_tag.outputs.PUBLISH_TAG }}
