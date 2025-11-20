@@ -86,17 +86,9 @@ jobs:
           provenance: true
           registry: 'https://registry.npmjs.org'
 
-      # - name: Publish Package GITHUB Registry 🚀
-      #   uses: JS-DevTools/npm-publish@v4.1.1
-      #   with:
-      #     tag: ${{ steps.versioning_and_tagging.outputs.PUBLISH_TAG }}
-      #     provenance: true
-      #     registry: "https://npm.pkg.github.com"
-
-      # - name: Commit and Push Version Changes
-      #   uses: stefanzweifel/git-auto-commit-action@v5
-      #   with:
-      #     commit_message: "ci: bump version to ${{ steps.versioning_and_tagging.outputs.NEW_VERSION }} [skip ci]"
-      #     branch: ${{ github.ref_name }}
-      #     commit_user_name: 'SyedArbaazHussain'
-      #     commit_user_email: 'arbaaz14122002@gmail.com'
+      - name: Publish Package GITHUB Registry 🚀
+        uses: JS-DevTools/npm-publish@v4.1.1
+        with:
+          tag: ${{ steps.versioning_and_tagging.outputs.PUBLISH_TAG }}
+          provenance: true
+          registry: "https://npm.pkg.github.com"
