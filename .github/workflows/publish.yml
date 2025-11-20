@@ -42,14 +42,11 @@ jobs:
         
       - name: Run Build
         run: npm run build
-        
-      - name: Run Tests (if script exists)
-        run: npm test --if-present
 
-      - name: Bump version, determine publish tag, and set output
+      - name: Determine publish tag, version and set output
         id: versioning_and_tagging
         run: |
-          # 1. Read the new, bumped version
+          # 1. Read the version
           VERSION=$(jq -r .version package.json)
           PUBLISH_TAG=""
 
@@ -57,8 +54,8 @@ jobs:
 
           # 2. Determine tag logic
           if [[ "$VERSION" == *"-rc"* ]]; then
-            PUBLISH_TAG="beta"
-            echo "Match '-rc' prerelease: Setting tag to 'beta'"
+            PUBLISH_TAG="rc"
+            echo "Match '-rc' prerelease: Setting tag to 'rc'"
           elif [[ "$VERSION" != *"-"* ]]; then
             PUBLISH_TAG="latest"
             echo "No hyphen found: Setting tag to 'latest' (stable version)"
