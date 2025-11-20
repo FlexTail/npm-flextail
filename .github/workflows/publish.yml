@@ -69,7 +69,10 @@ jobs:
 
       - name: 🔎 DEBUG :- Check Tag Output
         run: echo "Tag determined by previous step :- ${{ steps.determine_tag.outputs.PUBLISH_TAG }}"
-        
+      
+      - name: set registry
+        run: npm config set registry http //registry.npmjs.org/
+      
       - name: Publish Package 🚀
         run: npm publish --tag pre --provenance
         env:
