@@ -49,16 +49,13 @@ jobs:
       - name: Bump version, determine publish tag, and set output
         id: versioning_and_tagging
         run: |
-          # 1. Bump the prerelease part (e.g., 0.0.9-pre1 -> 0.0.9-pre1.0)
-          npm version prerelease --no-git-tag-version
-          
-          # 2. Read the new, bumped version
+          # 1. Read the new, bumped version
           VERSION=$(jq -r .version package.json)
           PUBLISH_TAG=""
 
           echo "Detected new package version: $VERSION"
 
-          # 3. Determine tag logic
+          # 2. Determine tag logic
           if [[ "$VERSION" == *"-rc"* ]]; then
             PUBLISH_TAG="beta"
             echo "Match '-rc' prerelease: Setting tag to 'beta'"
