@@ -4,7 +4,7 @@ on:
 
 permissions:
   id-token: write 
-  contents: write # NOTE: Changed from 'read' to 'write' to allow for local version bump commit
+  contents: write
 
 jobs:
   publish:
@@ -12,14 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     
     permissions:
-      contents: write # NOTE: Changed to 'write'
+      contents: write
       id-token: write
       
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # ... (Steps for Debugging, Setup Node, Dependencies, Build, Test remain the same)
       - name: 🔎 DEBUG :- Show Git Info
         run: |
           echo "Current Commit: $(git rev-parse HEAD)"
@@ -36,34 +35,13 @@ jobs:
         run: npm config ls -l | grep registry
 
       - name: Install dependencies (CI)
-        # Using npm install is safer if package-lock has issues, but since npm ci passed, 
-        # we can keep it as is, or switch back to npm install for robustness.
         run: npm ci 
         
-      - name: Run Build (if script exists)
-        run: npm run build --if-present
+      - name: Run Build
+        run: npm run build
         
       - name: Run Tests (if script exists)
         run: npm test --if-present
-
-      ## ⬆️ FIX: Automatically Bump Version 
-      # This step ensures the version in package.json is always new (e.g., 0.0.9-pre1 -> 0.0.9-pre2)
-      - name: Bump Prerelease Version
-        id: bump
-        run: |
-          # Use npm version to increment the prerelease part and prevent creating a git tag
-          npm version prerelease --no-git-tag-version
-
-          # Output the new version for debugging
-          NEW_VERSION=$(jq -r .version package.json)
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "BUMPED_VERSION: $NEW_VERSION"
-          
-          # Commit the package.json and package-lock.json changes created by npm version
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add package.json package-lock.json 
-          git commit -m "ci: bump version to $NEW_VERSION before publish [skip ci]"
 
       - name: Determine Publish Tag (Based on new version)
         id: determine_tag
@@ -93,7 +71,6 @@ jobs:
         run: echo "Tag determined by previous step :- ${{ steps.determine_tag.outputs.PUBLISH_TAG }}"
         
       - name: Publish Package 🚀
-        # Publishing the new, unique version with OIDC
-        run: npm publish --tag ${{ steps.determine_tag.outputs.PUBLISH_TAG }} --provenance
+        run: npm publish --tag pre --provenance
         env:
           PUBLISH_TAG: ${{ steps.determine_tag.outputs.PUBLISH_TAG }}
