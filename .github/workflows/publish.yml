@@ -3,8 +3,8 @@ on:
   workflow_dispatch:
 
 permissions:
+  contents: read
   id-token: write 
-  contents: write
 
 jobs:
   publish:
@@ -14,10 +14,13 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      packages: write
       
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 
 
       - name: 🔎 DEBUG :- Show Git Info
         run: |
@@ -25,10 +28,10 @@ jobs:
           echo "Branch: ${{ github.ref_name }}"
           echo "Event: ${{ github.event_name }}"
           
-      - name: Set up Node.js for Trusted Publish (OIDC)
-        uses: actions/setup-node@v4
+      - name: Set up Node.js 
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: "24"
           registry-url: 'https://registry.npmjs.org'
           
       - name: 🔎 DEBUG :- Check npm configuration
@@ -43,16 +46,19 @@ jobs:
       - name: Run Tests (if script exists)
         run: npm test --if-present
 
-      - name: Determine Publish Tag (Based on new version)
-        id: determine_tag
+      - name: Bump version, determine publish tag, and set output
+        id: versioning_and_tagging
         run: |
-          # Read the new, bumped version
+          # 1. Bump the prerelease part (e.g., 0.0.9-pre1 -> 0.0.9-pre1.0)
+          npm version prerelease --no-git-tag-version
+          
+          # 2. Read the new, bumped version
           VERSION=$(jq -r .version package.json)
           PUBLISH_TAG=""
 
           echo "Detected new package version: $VERSION"
 
-          # Logic to determine the publish tag is unchanged
+          # 3. Determine tag logic
           if [[ "$VERSION" == *"-rc"* ]]; then
             PUBLISH_TAG="beta"
             echo "Match '-rc' prerelease: Setting tag to 'beta'"
@@ -65,15 +71,32 @@ jobs:
           fi
           
           echo "Calculated NPM Tag: $PUBLISH_TAG"
+          
+          # Set outputs for use in later steps
           echo "PUBLISH_TAG=$PUBLISH_TAG" >> $GITHUB_OUTPUT
+          echo "NEW_VERSION=$VERSION" >> $GITHUB_OUTPUT 
 
       - name: 🔎 DEBUG :- Check Tag Output
-        run: echo "Tag determined by previous step :- ${{ steps.determine_tag.outputs.PUBLISH_TAG }}"
+        run: echo "Tag determined by previous step :- ${{ steps.versioning_and_tagging.outputs.PUBLISH_TAG }}"
       
-      - name: set registry
-        run: npm config set registry http //registry.npmjs.org/
-      
-      - name: Publish Package 🚀
-        run: npm publish --tag pre --provenance
-        env:
-          PUBLISH_TAG: ${{ steps.determine_tag.outputs.PUBLISH_TAG }}
+      - name: Publish Package NPM Registry 🚀
+        uses: JS-DevTools/npm-publish@v4.1.1
+        with:
+          tag: ${{ steps.versioning_and_tagging.outputs.PUBLISH_TAG }}
+          provenance: true
+          registry: 'https://registry.npmjs.org'
+
+      # - name: Publish Package GITHUB Registry 🚀
+      #   uses: JS-DevTools/npm-publish@v4.1.1
+      #   with:
+      #     tag: ${{ steps.versioning_and_tagging.outputs.PUBLISH_TAG }}
+      #     provenance: true
+      #     registry: "https://npm.pkg.github.com"
+
+      # - name: Commit and Push Version Changes
+      #   uses: stefanzweifel/git-auto-commit-action@v5
+      #   with:
+      #     commit_message: "ci: bump version to ${{ steps.versioning_and_tagging.outputs.NEW_VERSION }} [skip ci]"
+      #     branch: ${{ github.ref_name }}
+      #     commit_user_name: 'SyedArbaazHussain'
+      #     commit_user_email: 'arbaaz14122002@gmail.com'
