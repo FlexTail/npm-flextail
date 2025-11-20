@@ -46,8 +46,6 @@ jobs:
       - name: Run Tests (if script exists)
         run: npm test --if-present
 
-      ---
-
       ## ⬆️ FIX: Automatically Bump Version 
       # This step ensures the version in package.json is always new (e.g., 0.0.9-pre1 -> 0.0.9-pre2)
       - name: Bump Prerelease Version
