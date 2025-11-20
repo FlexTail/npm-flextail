@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node dist/cli.js",
-    "build:cli": "tsup scripts/cli.js --format esm --platform node --out-dir dist",
-    "prepublishOnly": "npm run build:cli"
+    "build": "tsup scripts/cli.js --format esm --platform node --out-dir dist",
+    "prepublishOnly": "npm run build"
   },
   "bin": {
     "flextail": "dist/cli.js"

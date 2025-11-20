@@ -3,7 +3,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write 
+  # 'id-token: write' is crucial for OIDC to generate a token for NPM
+  id-token: write
+  # 'contents: read' is needed for actions/checkout
   contents: read
 
 jobs:
@@ -11,6 +13,7 @@ jobs:
     name: Publish to NPM
     runs-on: ubuntu-latest
     
+    # Redefine permissions at the job level for best security practice
     permissions:
       contents: read
       id-token: write
@@ -19,22 +22,35 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: 🔎 DEBUG :- Show Git Info
+        run: |
+          echo "Current Commit: $(git rev-parse HEAD)"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Event: ${{ github.event_name }}"
+          
+      # This step is correct for OIDC Trusted Publish. 
       - name: Set up Node.js for Trusted Publish (OIDC)
         uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
           
+      - name: 🔎 DEBUG :- Check npm configuration
+        run: npm config ls -l | grep registry
+
       - name: Install dependencies (CI)
+        # Note: You need to install devDependencies to run your 'build' script.
         run: npm ci
         
+      # Since you have a 'prepublishOnly' script, running 'npm run build' here
+      # is technically optional but good for explicit build/test separation.
       - name: Run Build (if script exists)
         run: npm run build --if-present
         
       - name: Run Tests (if script exists)
         run: npm test --if-present
 
-      - name: Determine Publish Tag
+      - name: Determine Publish Tag (Based on version :- 0.0.9-pre1)
         id: determine_tag
         run: |
           VERSION=$(jq -r .version package.json)
@@ -42,18 +58,37 @@ jobs:
 
           echo "Detected package version: $VERSION"
 
-          if [[ "$VERSION" == *"-rc"* ]]; then
-            PUBLISH_TAG="beta"
-          elif [[ "$VERSION" != *"-"* ]]; then
-            PUBLISH_TAG="latest"
+          # Check for presence of a hyphen '-' in the version string.
+          if [[ "$VERSION" == *"-"* ]]; then
+            # This handles prerelease versions like '0.0.9-pre1', '1.0.0-alpha', or '2.0.0-rc.3'
+            
+            # Special case for explicit 'rc' versions
+            if [[ "$VERSION" == *"-rc"* ]]; then
+              PUBLISH_TAG="beta"
+              echo "Match '-rc' prerelease: Setting tag to 'beta'"
+            else
+              # All other prereleases (like '-pre1' from your package.json)
+              PUBLISH_TAG="pre"
+              echo "Match other prerelease (contains '-'): Setting tag to 'pre'"
+            fi
+            
           else
-            PUBLISH_TAG="pre"
+            # This handles stable versions like '1.0.0'
+            PUBLISH_TAG="latest"
+            echo "No hyphen found: Setting tag to 'latest' (stable version)"
           fi
           
           echo "Calculated NPM Tag: $PUBLISH_TAG"
           echo "PUBLISH_TAG=$PUBLISH_TAG" >> $GITHUB_OUTPUT
 
-      - name: Publish Package
+      - name: 🔎 DEBUG :- Check Tag Output
+        run: echo "Tag determined by previous step :- ${{ steps.determine_tag.outputs.PUBLISH_TAG }}"
+        
+      - name: Publish Package 🚀
+        # For scoped packages (@flextail/ui), 'npm publish' automatically defaults 
+        # to '--access public' if you have not configured a default access in your npmrc,
+        # but including it explicitly is safer.
+        # The OIDC token handles authentication.
         run: npm publish --access public --tag ${{ steps.determine_tag.outputs.PUBLISH_TAG }} --provenance
         env:
           PUBLISH_TAG: ${{ steps.determine_tag.outputs.PUBLISH_TAG }}

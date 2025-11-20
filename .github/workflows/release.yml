@@ -1,9 +1,10 @@
 name: Create Release on CLI Change
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
 
 jobs:
   create_release:
@@ -24,10 +25,7 @@ jobs:
 
       - name: Create Distribution Package
         run: |
-          mkdir dist
-          cp scripts/cli.js dist/
-          cp package.json dist/
-          zip -r flextail.zip dist/
+          npm pack
           
       - name: Determine Release Type and Tag
         id: release_logic
